@@ -43,6 +43,17 @@
             font-family: Arial, sans-serif;
             font-size: 14px;
         }
+        /* Estilos para la barra de búsqueda */
+        #search-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+        }
         </style>
 
         <style>
@@ -61,6 +72,12 @@
                 <a href="#" id="popup-closer" class="ol-popup-closer"></a>
                 <div id="popup-content"></div>
             </div>
+        </div>
+
+        <!-- Barra de búsqueda -->
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Ingrese clave..." />
+            <button onclick="buscarElemento()">Buscar</button>
         </div>
 
         <!-- Div para mostrar las coordenadas -->
@@ -83,59 +100,41 @@
         <script src="./resources/qgis2web.js"></script>
 
         <script>
-        // Estilo de resaltado
-        var highlightStyle = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: 'yellow', // Color del borde resaltado
-                width: 3
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(255, 255, 0, 0.3)' // Color de relleno semi-transparente
-            })
-        });
-
-        var selectedFeature = null;
-
-        // Evento para detectar movimiento del cursor sobre el mapa
-        map.on('pointermove', function (event) {
-            let featureFound = false;
+        function buscarElemento() {
+            let claveBuscada = document.getElementById('search-input').value.trim();
+            if (!claveBuscada) {
+                alert("Por favor, ingrese una clave.");
+                return;
+            }
             
-            map.getTargetElement().style.cursor = '';
-
-            map.forEachFeatureAtPixel(event.pixel, function (feature, layer) {
-                if (layer) {
-                    featureFound = true;
-                    if (selectedFeature !== feature) {
-                        if (selectedFeature) {
-                            selectedFeature.setStyle(null); // Restaurar estilo del anterior
+            let encontrado = false;
+            map.getLayers().forEach(layer => {
+                if (layer.getSource && layer.getSource().getFeatures) {
+                    let features = layer.getSource().getFeatures();
+                    features.forEach(feature => {
+                        if (feature.get('CLAVE1K') === claveBuscada) {
+                            let extent = feature.getGeometry().getExtent();
+                            map.getView().fit(extent, { duration: 1000, maxZoom: 17 });
+                            
+                            feature.setStyle(new ol.style.Style({
+                                stroke: new ol.style.Stroke({ color: 'yellow', width: 3 }),
+                                fill: new ol.style.Fill({ color: 'rgba(255, 255, 0, 0.3)' })
+                            }));
+                            
+                            setTimeout(() => {
+                                feature.setStyle(null);
+                            }, 3000);
+                            
+                            encontrado = true;
                         }
-                        selectedFeature = feature;
-                        selectedFeature.setStyle(highlightStyle);
-                        map.getTargetElement().style.cursor = 'pointer';
-                    }
+                    });
                 }
             });
 
-            // Si no se encontró ningún feature, quitar el resaltado del anterior
-            if (!featureFound && selectedFeature) {
-                selectedFeature.setStyle(null);
-                selectedFeature = null;
+            if (!encontrado) {
+                alert("Clave no encontrada.");
             }
-
-            // Obtener las coordenadas del cursor y mostrar
-            var coordinate = event.coordinate;
-            var transformedCoord = ol.proj.toLonLat(coordinate); // Transformar a longitud/latitud
-            var coordsString = 'Lon: ' + transformedCoord[0].toFixed(6) + ' | Lat: ' + transformedCoord[1].toFixed(6);
-            document.getElementById('coordinates').innerHTML = 'Coordenadas: ' + coordsString;
-        });
-
-        // Evento para limpiar cuando el cursor sale del mapa
-        map.getViewport().addEventListener('mouseleave', function () {
-            if (selectedFeature) {
-                selectedFeature.setStyle(null);
-                selectedFeature = null;
-            }
-        });
+        }
         </script>
     </body>
 </html>
