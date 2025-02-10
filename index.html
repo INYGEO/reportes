@@ -79,7 +79,7 @@
       z-index: 1000;
       background: white;
       padding: 12px;
-      width: 350px;
+      width: 370px;
       box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
       border-radius: 5px;
       max-height: 80%;
@@ -92,9 +92,25 @@
     table, th, td {
       border: 1px solid black;
     }
-    th, td {
-      padding: 1px;
+    th {
+      background-color: #28a745; /* Fondo verde para los encabezados */
+      color: white;
+      font-weight: bold;
+      padding: 5px;
       text-align: left;
+    }
+    td {
+      padding: 5px;
+      text-align: left;
+    }
+    /* Estilos para las filas alternas */
+    tr:nth-child(2n) td {
+      background-color: #d4edda; /* Fondo verde claro para filas pares */
+      color: black;
+    }
+    tr:nth-child(2n+1) td {
+      background-color: white; /* Fondo blanco para filas impares */
+      color: black;
     }
     /* Estilos para el Modal */
     #modal-close {
@@ -243,7 +259,7 @@
     // Función para generar la tabla HTML
     function generarTabla(data) {
       let table = "<table><tr><th>Clave</th><th>Estado</th><th>Última Modificación</th></tr>";
-      data.slice(1).forEach(row => {
+      data.slice(1).forEach((row, index) => {
         table += "<tr>";
         table += `<td>${row[0]}</td>`;
         table += `<td>${row[1]}</td>`;
