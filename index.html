@@ -110,6 +110,8 @@
       border-radius: 5px;
       resize: both;       /* Redimensionable */
       overflow: auto;     /* Necesario para redimensionar */
+      min-width: 200px;   /* Ancho mínimo */
+      min-height: 200px;  /* Alto mínimo */
     }
     /* Encabezado del modal para arrastrar */
     #modal-header {
@@ -134,6 +136,34 @@
     #modal-close:focus {
       color: #bbb;
       text-decoration: none;
+    }
+    /* Botón de minimizar */
+    #modal-minimize {
+      color: #fff;
+      float: right;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    #modal-minimize:hover,
+    #modal-minimize:focus {
+      color: #bbb;
+      text-decoration: none;
+    }
+    .minimized {
+      height: 30px;
+      width: 100px;
+      overflow: hidden;
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      border: 1px solid #888;
+      background-color: #fefefe;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -165,6 +195,7 @@
       <div id="modal-header">
         <span id="modal-title">Tabla de Excel</span>
         <span id="modal-close">&times;</span>
+        <span id="modal-minimize">_</span>
       </div>
       <div id="modal-body">
         <!-- Aquí se insertará la tabla -->
@@ -285,6 +316,19 @@
       document.getElementById('modal').style.display = 'none';
     };
 
+    // Función para minimizar el modal
+    document.getElementById('modal-minimize').onclick = function() {
+      document.getElementById('modal-content').style.display = 'none';
+      const minimizedModal = document.createElement('div');
+      minimizedModal.classList.add('minimized');
+      minimizedModal.innerHTML = "Ver tabla";
+      minimizedModal.onclick = function() {
+        document.getElementById('modal-content').style.display = 'block';
+        minimizedModal.style.display = 'none';
+      };
+      document.body.appendChild(minimizedModal);
+    };
+
     // Función para hacer que el modal sea movible
     dragElement(document.getElementById('modal-content'));
 
@@ -324,4 +368,3 @@
   </script>
 </body>
 </html>
-
