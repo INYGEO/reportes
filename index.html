@@ -1,244 +1,326 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador de Mapa con Tabla de Excel</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="./resources/ol.css">
-    <link rel="stylesheet" href="resources/fontawesome-all.min.css">
-    <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
-    <link rel="stylesheet" href="./resources/qgis2web.css">
-    <style>
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="./resources/ol.css">
-        <link rel="stylesheet" href="resources/fontawesome-all.min.css">
-        <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
-        <link rel="stylesheet" href="./resources/qgis2web.css">
-        <style>
-        html, body {
-            background-color: #ffffff;
-            margin: 0;
-@@ -33,7 +34,8 @@
-        .ol-control {
-            background-color: rgba(255,255,255,.4) !important;
-            padding: 2px !important;
-        }
-        } 
-        /* Añadido para mostrar las coordenadas */
-        #coordinates {
-            position: absolute;
-            bottom: 10px;
-@@ -45,6 +47,7 @@
-            font-size: 14px;
-            z-index: 1000;
-        }
-        /* Estilos para la barra de búsqueda */
-        #search-container {
-            position: absolute;
-            top: 10px;
-@@ -64,60 +67,58 @@
-            padding: 5px 10px;
-            margin-left: 10px;
-        }
-        #tabla-container {
-            margin-top: 20px;
-        /* Espacio entre los botones */
-        #search-container button {
-            margin-bottom: 10px;
-        }
-        table {
-        </style>
-        <style>
-        html, body, #map {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-            height: 100%;
-            padding: 0;
-            margin: 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualizador de Mapa con Tabla de Excel</title>
+  <!-- Librería para trabajar con Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+  
+  <!-- Hojas de estilo -->
+  <link rel="stylesheet" href="./resources/ol.css">
+  <link rel="stylesheet" href="resources/fontawesome-all.min.css">
+  <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
+  <link rel="stylesheet" href="./resources/qgis2web.css">
+  
+  <style>
+    html, body {
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    .ol-control > * {
+      background-color: #f8f8f8!important;
+      color: #444444!important;
+      border-radius: 0px;
+    }
+    .ol-attribution a,
+    .gcd-gl-input::placeholder,
+    .search-layer-input-search::placeholder {
+      color: #444444!important;
+    }
+    .search-layer-input-search {
+      background-color: #f8f8f8!important;
+    }
+    .ol-control > *:focus,
+    .ol-control >*:hover {
+      background-color: rgba(248, 248, 248, 0.7)!important;
+    }
+    .ol-control {
+      background-color: rgba(255,255,255,.4)!important;
+      padding: 2px!important;
+    }
+    #coordinates {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 5px;
+      border-radius: 5px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      z-index: 1000;
+    }
+    #search-container {
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+      width: 250px;
+    }
+    #search-input {
+      width: 150px;
+      padding: 5px;
+    }
+    button {
+      padding: 5px 10px;
+      margin-left: 10px;
+    }
+    #tabla-container {
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    /* Estilos para el Modal */
+    #modal {
+      display: none; /* Oculto por defecto */
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
+    }
+    #modal-content {
+      position: absolute;
+      top: 50px;   /* Posición inicial, se podrá mover */
+      left: 50px;  /* Posición inicial, se podrá mover */
+      background-color: #fefefe;
+      padding: 0;
+      border: 1px solid #888;
+      width: 80%;
+      max-height: 80%;
+      overflow: auto;
+      border-radius: 5px;
+      resize: both;       /* Redimensionable */
+      overflow: auto;     /* Necesario para redimensionar */
+    }
+    /* Encabezado del modal para arrastrar */
+    #modal-header {
+      cursor: move;
+      background-color: #2196F3;
+      color: white;
+      padding: 10px;
+      user-select: none;
+    }
+    #modal-title {
+      font-size: 18px;
+      display: inline-block;
+    }
+    #modal-close {
+      color: #fff;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #modal-close:hover,
+    #modal-close:focus {
+      color: #bbb;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-    <div id="map">
-        <div id="popup" class="ol-popup">
-            <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-            <div id="popup-content"></div>
-        </style>
-        <title>Visualizador de Mapa</title>
-    </head>
-    <body>
-        <div id="map">
-            <div id="popup" class="ol-popup">
-                <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-                <div id="popup-content"></div>
-            </div>
-        </div>
+  <div id="map">
+    <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+      <div id="popup-content"></div>
     </div>
-    <div id="search-container">
-        <input type="text" id="search-input" placeholder="Ingrese clave..." />
-        <button onclick="buscarElemento()">Buscar</button>
+  </div>
+
+  <div id="search-container">
+    <input type="text" id="search-input" placeholder="Ingrese clave..." />
+    <button onclick="buscarElemento()">Buscar</button>
+  </div>
+
+  <div id="coordinates">Coordenadas: -</div>
+
+  <!-- Botón para cargar la tabla, posicionado en la zona izquierda -->
+  <button id="load-table-btn" 
+          onclick="cargarExcelDesdeGitHub()" 
+          style="position: absolute; top: 100px; left: 50px; z-index: 1000; background-color: #f8f8f8; padding: 10px 15px; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3);">
+    Cargar Tabla
+  </button>
+
+  <!-- Modal para mostrar la tabla -->
+  <div id="modal">
+    <div id="modal-content">
+      <div id="modal-header">
+        <span id="modal-title">Tabla de Excel</span>
+        <span id="modal-close">&times;</span>
+      </div>
+      <div id="modal-body">
+        <!-- Aquí se insertará la tabla -->
+      </div>
     </div>
-    <div id="coordinates">Coordenadas: -</div>
-    <!-- Botón para cargar el archivo Excel desde GitHub -->
-    <button onclick="cargarExcelDesdeGitHub()">Cargar Tabla</button>
-    
-    <!-- Contenedor donde se mostrará la tabla -->
-    <div id="tabla-container"></div>
+  </div>
 
-    <script src="resources/qgis2web_expressions.js"></script>
-    <script src="./resources/functions.js"></script>
-    <script src="./resources/ol.js"></script>
-    <script src="./resources/ol-layerswitcher.js"></script>
-    <script src="layers/MALLA_TIJUANA_CARTAS1K_1.js"></script>
-    <script src="layers/PROCESADAS_2.js"></script>
-    <script src="layers/VOLADAS_3.js"></script>
-    <script src="layers/ENTREGADAS_4.js"></script>
-    <script src="styles/MALLA_TIJUANA_CARTAS1K_1_style.js"></script>
-    <script src="styles/PROCESADAS_2_style.js"></script>
-    <script src="styles/VOLADAS_3_style.js"></script>
-    <script src="styles/ENTREGADAS_4_style.js"></script>
-    <script src="./layers/layers.js" type="text/javascript"></script> 
-    <script src="./resources/Autolinker.min.js"></script>
-    <script src="./resources/qgis2web.js"></script>
-        <!-- Barra de búsqueda -->
-        <div id="search-container">
-            <input type="text" id="search-input" placeholder="Ingrese clave..." />
-            <button onclick="buscarElemento()">Buscar</button>
-            <!-- Botón para cargar la tabla -->
-            <button onclick="cargarTabla()">Cargar Tabla</button>
-        </div>
+  <script src="resources/qgis2web_expressions.js"></script>
+  <script src="./resources/functions.js"></script>
+  <script src="./resources/ol.js"></script>
+  <script src="./resources/ol-layerswitcher.js"></script>
+  <script src="layers/MALLA_TIJUANA_CARTAS1K_1.js"></script>
+  <script src="layers/PROCESADAS_2.js"></script>
+  <script src="layers/VOLADAS_3.js"></script>
+  <script src="layers/ENTREGADAS_4.js"></script>
+  <script src="styles/MALLA_TIJUANA_CARTAS1K_1_style.js"></script>
+  <script src="styles/PROCESADAS_2_style.js"></script>
+  <script src="styles/VOLADAS_3_style.js"></script>
+  <script src="styles/ENTREGADAS_4_style.js"></script>
+  <script src="./layers/layers.js" type="text/javascript"></script>
+  <script src="./resources/Autolinker.min.js"></script>
+  <script src="./resources/qgis2web.js"></script>
 
-    <script>
-        <!-- Div para mostrar las coordenadas -->
-        <div id="coordinates">Coordenadas: -</div>
-        <script src="resources/qgis2web_expressions.js"></script>
-        <script src="./resources/functions.js"></script>
-        <script src="./resources/ol.js"></script>
-        <script src="./resources/ol-layerswitcher.js"></script>
-        <script src="layers/MALLA_TIJUANA_CARTAS1K_1.js"></script>
-        <script src="layers/PROCESADAS_2.js"></script>
-        <script src="layers/VOLADAS_3.js"></script>
-        <script src="layers/ENTREGADAS_4.js"></script>
-        <script src="styles/MALLA_TIJUANA_CARTAS1K_1_style.js"></script>
-        <script src="styles/PROCESADAS_2_style.js"></script>
-        <script src="styles/VOLADAS_3_style.js"></script>
-        <script src="styles/ENTREGADAS_4_style.js"></script>
-        <script src="./layers/layers.js" type="text/javascript"></script> 
-        <script src="./resources/Autolinker.min.js"></script>
-        <script src="./resources/qgis2web.js"></script>
-        <script>
-        // Estilo de resaltado
-        var highlightStyle = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-@@ -181,13 +182,11 @@
-                            let extent = feature.getGeometry().getExtent();
-                            map.getView().fit(extent, { duration: 1000, maxZoom: 17 });
+  <script>
+    // Estilo de resaltado para las características del mapa
+    var highlightStyle = new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: 'yellow', // Color del borde resaltado
+        width: 3
+      }),
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 0, 0.3)' // Color de relleno semi-transparente
+      })
+    });
 
-                            feature.setStyle(new ol.style.Style({
-                                stroke: new ol.style.Stroke({ color: 'yellow', width: 3 }),
-                                fill: new ol.style.Fill({ color: 'rgba(255, 255, 0, 0.3)' })
-                            }));
+    var selectedFeature = null;
 
-                            setTimeout(() => {
-                                feature.setStyle(null);
-                            }, 3000);
-@@ -203,65 +202,37 @@
+    // Evento para detectar el movimiento del cursor sobre el mapa
+    map.on('pointermove', function (event) {
+      let featureFound = false;
+      map.getTargetElement().style.cursor = '';
+      map.forEachFeatureAtPixel(event.pixel, function (feature, layer) {
+        if (layer) {
+          featureFound = true;
+          if (selectedFeature !== feature) {
+            if (selectedFeature) {
+              selectedFeature.setStyle(null);
             }
+            selectedFeature = feature;
+            selectedFeature.setStyle(highlightStyle);
+            map.getTargetElement().style.cursor = 'pointer';
+          }
         }
+      });
+      if (!featureFound && selectedFeature) {
+        selectedFeature.setStyle(null);
+        selectedFeature = null;
+      }
+      var coordinate = event.coordinate;
+      var transformedCoord = ol.proj.toLonLat(coordinate);
+      var coordsString = 'Lon: ' + transformedCoord[0].toFixed(6) + ' | Lat: ' + transformedCoord[1].toFixed(6);
+      document.getElementById('coordinates').innerHTML = 'Coordenadas: ' + coordsString;
+    });
 
-        // Función para cargar el archivo Excel desde GitHub
-        function cargarExcelDesdeGitHub() {
-            // URL del archivo Excel en GitHub (reemplaza con la URL de tu archivo)
-            const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx';
-            fetch(url)
-                .then(response => response.blob())  // Obtener el archivo como un blob
-                .then(blob => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const data = e.target.result; // Contenido del archivo Excel
-                        const wb = XLSX.read(data, { type: 'binary' }); // Leer el archivo Excel
-                        // Obtener la primera hoja del archivo
-                        const hoja = wb.Sheets[wb.SheetNames[0]];
-                        // Convertir la hoja a JSON
-                        const json = XLSX.utils.sheet_to_json(hoja);
-                        // Mostrar la tabla en HTML
-                        mostrarTabla(json);
-                    };
-        // Función para cargar la tabla desde un archivo JSON
-        function cargarTabla() {
-            var tablaContainer = document.createElement('div');
-            tablaContainer.style.position = 'absolute';
-            tablaContainer.style.top = '50px';
-            tablaContainer.style.left = '50px';
-            tablaContainer.style.zIndex = 1000;
-            tablaContainer.style.background = 'white';
-            tablaContainer.style.padding = '10px';
-            tablaContainer.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.3)';
-            tablaContainer.style.maxHeight = '400px';
-            tablaContainer.style.overflowY = 'auto';
-            fetch('data/tabla.json')  // Asegúrate de tener el archivo JSON en la carpeta 'data'
-                .then(response => response.json())
-                .then(data => {
-                    var tablaHTML = '<table style="width:100%; border-collapse: collapse;">';
-                    tablaHTML += '<tr><th>Clave</th><th>Estado</th><th>Fecha</th></tr>';
-                    data.forEach(item => {
-                        tablaHTML += `<tr><td>${item.clave}</td><td>${item.estado}</td><td>${item.fecha}</td></tr>`;
-                    });
+    function buscarElemento() {
+      let claveBuscada = document.getElementById('search-input').value.trim();
+      if (!claveBuscada) {
+        alert("Por favor, ingrese una clave.");
+        return;
+      }
+      let encontrado = false;
+      map.getLayers().forEach(layer => {
+        if (layer.getSource && layer.getSource().getFeatures) {
+          let features = layer.getSource().getFeatures();
+          features.forEach(feature => {
+            if (feature.get('CLAVE1K') === claveBuscada) {
+              let extent = feature.getGeometry().getExtent();
+              map.getView().fit(extent, { duration: 1000, maxZoom: 17 });
+              feature.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({ color: 'yellow', width: 3 }),
+                fill: new ol.style.Fill({ color: 'rgba(255, 255, 0, 0.3)' })
+              }));
+              setTimeout(() => {
+                feature.setStyle(null);
+              }, 3000);
+              encontrado = true;
+            }
+          });
+        }
+      });
+      if (!encontrado) {
+        alert("Clave no encontrada.");
+      }
+    }
 
-                    // Leer el archivo Excel como una cadena binaria
-                    reader.readAsBinaryString(blob);
-                    tablaHTML += '</table>';
-                    tablaContainer.innerHTML = tablaHTML;
-                    document.body.appendChild(tablaContainer);
-                })
-                .catch(error => console.error('Error al cargar el archivo desde GitHub:', error));
-        }
-        // Función para mostrar los datos en una tabla HTML
-        function mostrarTabla(data) {
-            const container = document.getElementById('tabla-container');
-            container.innerHTML = ''; // Limpiar el contenedor antes de mostrar la nueva tabla
-            // Crear la tabla HTML
-            const table = document.createElement('table');
-            // Crear la fila de encabezado
-            const header = table.createTHead();
-            const headerRow = header.insertRow();
-            const headers = ['CLAVE', 'ESTADO', 'FECHA DE ULTIMA MODIFICACION']; // Nombre de las columnas
-            headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.textContent = headerText;
-                headerRow.appendChild(th);
-            });
-            // Agregar las filas con los datos
-            const tbody = table.createTBody();
-            data.forEach(item => {
-                const row = tbody.insertRow();
-                row.insertCell().textContent = item.CLAVE || '';
-                row.insertCell().textContent = item.ESTADO || '';
-                row.insertCell().textContent = item['FECHA DE ULTIMA MODIFICACION'] || ''; // Ajusta el nombre de la columna si es necesario
-            });
-            // Agregar la tabla al contenedor
-            container.appendChild(table);
-                .catch(error => {
-                    console.error("Error al cargar la tabla:", error);
-                });
-        }
-    </script>
+    // Función para cargar el archivo Excel desde GitHub y mostrarlo en el modal
+    function cargarExcelDesdeGitHub() {
+      const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx'; // Reemplaza con la URL correcta
+      fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const htmlTable = XLSX.utils.sheet_to_html(sheet);
+            document.getElementById('modal-body').innerHTML = htmlTable;
+            document.getElementById('modal').style.display = 'block'; // Mostrar el modal
+          };
+          reader.readAsArrayBuffer(blob);
+        })
+        .catch(error => console.error("Error al cargar el archivo Excel:", error));
+    }
+
+    // Función para cerrar el modal
+    document.getElementById('modal-close').onclick = function() {
+      document.getElementById('modal').style.display = 'none';
+    };
+
+    // Función para hacer que el modal sea movible
+    dragElement(document.getElementById('modal-content'));
+
+    function dragElement(elmnt) {
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      if (document.getElementById(elmnt.id + "-header")) {
+        document.getElementById(elmnt.id + "-header").onmousedown = dragMouseDown;
+      } else {
+        elmnt.onmousedown = dragMouseDown;
+      }
+
+      function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+      }
+
+      function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+      }
+
+      function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+      }
+    }
+  </script>
 </body>
-        </script>
-    </body>
 </html>
