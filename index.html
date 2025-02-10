@@ -146,6 +146,11 @@
     Cargar Tabla
   </button>
 
+  <!-- Botón para descargar la tabla -->
+  <button id="download-table-btn" onclick="descargarTabla()" style="position: absolute; top: 100px; left: 170px; z-index: 1000; background-color: #f8f8f8; padding: 10px 15px; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3); display:none;">
+    Descargar Tabla
+  </button>
+
   <!-- Contenedor de la tabla, oculto inicialmente -->
   <div id="tabla-container">
     <button id="modal-close" onclick="cerrarTabla()">×</button>
@@ -268,13 +273,29 @@
       });
       table += "</table>";
       document.getElementById('modal-body').innerHTML = table;
-      // Mostrar la tabla
+      // Mostrar la tabla y el botón de descarga
       document.getElementById('tabla-container').style.display = 'block';
+      document.getElementById('download-table-btn').style.display = 'inline-block';
+    }
+
+    // Función para descargar la tabla como archivo Excel
+    function descargarTabla() {
+      const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx';  // URL del archivo Excel
+      fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'PRUEBA.xlsx';
+          link.click();
+        })
+        .catch(error => console.error('Error al descargar la tabla:', error));
     }
 
     // Cerrar la tabla
     function cerrarTabla() {
       document.getElementById('tabla-container').style.display = 'none';
+      document.getElementById('download-table-btn').style.display = 'none';  // Ocultar botón de descarga
     }
   </script>
 </body>
