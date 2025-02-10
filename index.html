@@ -17,25 +17,7 @@
             padding: 0;
             height: 100%;
         }
-        .ol-control > * {
-            background-color: #f8f8f8!important;
-            color: #444444!important;
-            border-radius: 0px;
-        }
-        .ol-attribution a, .gcd-gl-input::placeholder, .search-layer-input-search::placeholder {
-            color: #444444!important;
-        }
-        .search-layer-input-search {
-            background-color: #f8f8f8!important;
-        }
-        .ol-control > *:focus, .ol-control >*:hover {
-            background-color: rgba(248, 248, 248, 0.7)!important;
-        } 
-        .ol-control {
-            background-color: rgba(255,255,255,.4) !important;
-            padding: 2px !important;
-        } 
-        /* Añadido para mostrar las coordenadas */
+        /* Estilos adicionales */
         #coordinates {
             position: absolute;
             bottom: 10px;
@@ -47,27 +29,7 @@
             font-size: 14px;
             z-index: 1000;
         }
-        /* Estilos para la barra de búsqueda */
-        #search-container {
-            position: absolute;
-            top: 10px;
-            left: 50px;
-            z-index: 1000;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
-            width: 250px;
-        }
-        #search-input {
-            width: 150px;
-            padding: 5px;
-        }
-        button {
-            padding: 5px 10px;
-            margin-left: 10px;
-        }
-        /* Tabla para mostrar el archivo CSV */
+        /* Estilos para la tabla */
         #csv-table-container {
             position: absolute;
             top: 60px;
@@ -145,10 +107,15 @@
         <script>
         // Función para cargar y mostrar el archivo CSV desde GitHub
         function cargarCSV() {
-            const url = 'https://github.com/INYGEO/reportes/blob/main/PRUEBA.csv'; // Cambia esta URL con la correcta
+            const url = 'https://raw.githubusercontent.com/tu-usuario/tu-repositorio/main/PRUEBA.csv'; // Asegúrate de actualizar esta URL
 
             fetch(url)
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('No se pudo cargar el archivo CSV');
+                    }
+                    return response.text();
+                })
                 .then(data => {
                     // Parsear el CSV
                     const rows = data.split('\n');
@@ -180,94 +147,14 @@
                         tbody.appendChild(tr);
                     });
                 })
-                .catch(error => console.error('Error cargando el archivo CSV:', error));
+                .catch(error => {
+                    console.error('Error cargando el archivo CSV:', error);
+                    alert('Hubo un error al cargar el archivo CSV');
+                });
         }
 
         // Llamar la función cargarCSV cuando se cargue la página
         window.onload = cargarCSV;
-
-        // Estilo de resaltado
-        var highlightStyle = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: 'yellow', // Color del borde resaltado
-                width: 3
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(255, 255, 0, 0.3)' // Color de relleno semi-transparente
-            })
-        });
-
-        var selectedFeature = null;
-
-        // Evento para detectar movimiento del cursor sobre el mapa
-        map.on('pointermove', function (event) {
-            let featureFound = false;
-            
-            map.getTargetElement().style.cursor = '';
-
-            map.forEachFeatureAtPixel(event.pixel, function (feature, layer) {
-                if (layer) {
-                    featureFound = true;
-                    if (selectedFeature !== feature) {
-                        if (selectedFeature) {
-                            selectedFeature.setStyle(null); // Restaurar estilo del anterior
-                        }
-                        selectedFeature = feature;
-                        selectedFeature.setStyle(highlightStyle);
-                        map.getTargetElement().style.cursor = 'pointer';
-                    }
-                }
-            });
-
-            // Si no se encontró ningún feature, quitar el resaltado del anterior
-            if (!featureFound && selectedFeature) {
-                selectedFeature.setStyle(null);
-                selectedFeature = null;
-            }
-
-            // Obtener las coordenadas del cursor y mostrar
-            var coordinate = event.coordinate;
-            var transformedCoord = ol.proj.toLonLat(coordinate); // Transformar a longitud/latitud
-            var coordsString = 'Lon: ' + transformedCoord[0].toFixed(6) + ' | Lat: ' + transformedCoord[1].toFixed(6);
-            document.getElementById('coordinates').innerHTML = 'Coordenadas: ' + coordsString;
-        });
-
-        // Función de búsqueda
-        function buscarElemento() {
-            let claveBuscada = document.getElementById('search-input').value.trim();
-            if (!claveBuscada) {
-                alert("Por favor, ingrese una clave.");
-                return;
-            }
-            
-            let encontrado = false;
-            map.getLayers().forEach(layer => {
-                if (layer.getSource && layer.getSource().getFeatures) {
-                    let features = layer.getSource().getFeatures();
-                    features.forEach(feature => {
-                        if (feature.get('CLAVE1K') === claveBuscada) {
-                            let extent = feature.getGeometry().getExtent();
-                            map.getView().fit(extent, { duration: 1000, maxZoom: 17 });
-                            
-                            feature.setStyle(new ol.style.Style({
-                                stroke: new ol.style.Stroke({ color: 'yellow', width: 3 }),
-                                fill: new ol.style.Fill({ color: 'rgba(255, 255, 0, 0.3)' })
-                            }));
-                            
-                            setTimeout(() => {
-                                feature.setStyle(null);
-                            }, 3000);
-                            
-                            encontrado = true;
-                        }
-                    });
-                }
-            });
-
-            if (!encontrado) {
-                alert("Clave no encontrada.");
-            }
-        }
         </script>
     </body>
 </html>
