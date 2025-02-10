@@ -72,7 +72,18 @@
       margin-left: 10px;
     }
     #tabla-container {
-      margin-top: 20px;
+      display: none; /* La tabla está oculta inicialmente */
+      position: absolute;
+      top: 160px;
+      left: 50px;
+      z-index: 1000;
+      background: white;
+      padding: 12px;
+      width: 350px;
+      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+      max-height: 80%;
+      overflow-y: auto;
     }
     table {
       width: 100%;
@@ -82,42 +93,20 @@
       border: 1px solid black;
     }
     th, td {
-      padding: 8px;
+      padding: 1px;
       text-align: left;
     }
     /* Estilos para el Modal */
-    #modal {
-      display: none; /* Oculto por defecto */
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
-    }
-    #modal-content {
-      background-color: #fefefe;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-height: 80%;
-      overflow-y: auto;
-      border-radius: 5px;
-    }
     #modal-close {
       color: #aaa;
-      float: right;
-      font-size: 28px;
+      font-size: 15px;
       font-weight: bold;
+      cursor: pointer;
     }
     #modal-close:hover,
     #modal-close:focus {
       color: black;
       text-decoration: none;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -137,19 +126,15 @@
   <div id="coordinates">Coordenadas: -</div>
 
   <!-- Botón para cargar la tabla, posicionado en la zona izquierda -->
-  <button id="load-table-btn" 
-          onclick="cargarExcelDesdeGitHub()" 
-          style="position: absolute; top: 100px; left: 50px; z-index: 1000; background-color: #f8f8f8; padding: 10px 15px; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3);">
+  <button id="load-table-btn" onclick="cargarExcelDesdeGitHub()" style="position: absolute; top: 100px; left: 50px; z-index: 1000; background-color: #f8f8f8; padding: 10px 15px; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3);">
     Cargar Tabla
   </button>
 
-  <!-- Modal para mostrar la tabla -->
-  <div id="modal">
-    <div id="modal-content">
-      <span id="modal-close">&times;</span>
-      <div id="modal-body">
-        <!-- Aquí se insertará la tabla -->
-      </div>
+  <!-- Contenedor de la tabla, oculto inicialmente -->
+  <div id="tabla-container">
+    <button id="modal-close" onclick="cerrarTabla()">×</button>
+    <div id="modal-body">
+      <!-- Aquí se insertará la tabla -->
     </div>
   </div>
 
@@ -245,55 +230,36 @@
     function cargarExcelDesdeGitHub() {
       const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx';  // Reemplaza esta URL por la correcta
       fetch(url)
-        .then(response => response.blob())
-        .then(blob => {
-          console.log("Archivo cargado correctamente");
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const data = e.target.result;
-            const wb = XLSX.read(data, { type: 'binary' });
-            const hoja = wb.Sheets[wb.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(hoja);
-            console.log("Datos cargados:", json);
-            mostrarTabla(json);
-          };
-          reader.readAsBinaryString(blob);
+        .then(response => response.arrayBuffer())
+        .then(data => {
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const tableData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+          generarTabla(tableData);
         })
-        .catch(error => {
-          console.error('Error al cargar el archivo desde GitHub:', error);
-          alert('Hubo un error al cargar el archivo. Revisa la consola para más detalles.');
-        });
+        .catch(error => console.error(error));
     }
 
-    // Función para mostrar los datos en una tabla HTML dentro del modal
-    function mostrarTabla(data) {
-      let tablaHTML = '<table>';
-      tablaHTML += '<tr><th>CLAVE</th><th>ESTADO</th><th>FECHA DE ULTIMA MODIFICACION</th></tr>';
-      data.forEach(item => {
-        tablaHTML += `<tr>
-                        <td>${item.CLAVE || ''}</td>
-                        <td>${item.ESTADO || ''}</td>
-                        <td>${item['FECHA DE ULTIMA MODIFICACION'] || ''}</td>
-                      </tr>`;
+    // Función para generar la tabla HTML
+    function generarTabla(data) {
+      let table = "<table><tr><th>Clave</th><th>Estado</th><th>Última Modificación</th></tr>";
+      data.slice(1).forEach(row => {
+        table += "<tr>";
+        table += `<td>${row[0]}</td>`;
+        table += `<td>${row[1]}</td>`;
+        table += `<td>${row[2]}</td>`;
+        table += "</tr>";
       });
-      tablaHTML += '</table>';
-      document.getElementById('modal-body').innerHTML = tablaHTML;
-      // Mostrar el modal
-      document.getElementById('modal').style.display = 'block';
+      table += "</table>";
+      document.getElementById('modal-body').innerHTML = table;
+      // Mostrar la tabla
+      document.getElementById('tabla-container').style.display = 'block';
     }
 
-    // Cerrar el modal cuando se haga clic en la "×"
-    document.getElementById('modal-close').onclick = function() {
-      document.getElementById('modal').style.display = 'none';
-    };
-
-    // Cerrar el modal si se hace clic fuera del contenido del modal
-    window.onclick = function(event) {
-      const modal = document.getElementById('modal');
-      if (event.target == modal) {
-        modal.style.display = 'none';
-      }
-    };
+    // Cerrar la tabla
+    function cerrarTabla() {
+      document.getElementById('tabla-container').style.display = 'none';
+    }
   </script>
 </body>
 </html>
