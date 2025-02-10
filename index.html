@@ -266,56 +266,86 @@
       fetch(url)
         .then(response => response.blob())
         .then(blob => {
+          console.log("Archivo cargado correctamente");
           const reader = new FileReader();
-          reader.onload = function(event) {
-            const data = new Uint8Array(event.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const htmlTable = XLSX.utils.sheet_to_html(sheet);
-            document.getElementById('modal-body').innerHTML = htmlTable;
-            document.getElementById('modal').style.display = 'block'; // Mostrar el modal
+          reader.onload = function(e) {
+            const data = e.target.result;
+            const wb = XLSX.read(data, { type: 'binary' });
+            const hoja = wb.Sheets[wb.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(hoja);
+            console.log("Datos cargados:", json);
+            mostrarTabla(json);
           };
-          reader.readAsArrayBuffer(blob);
+          reader.readAsBinaryString(blob);
         })
-        .catch(error => console.error("Error al cargar el archivo Excel:", error));
+        .catch(error => {
+          console.error('Error al cargar el archivo desde GitHub:', error);
+          alert('Hubo un error al cargar el archivo. Revisa la consola para más detalles.');
+        });
     }
 
-    // Función para cerrar el modal
+    // Función para mostrar los datos en una tabla HTML dentro del modal
+    function mostrarTabla(data) {
+      let tablaHTML = '<table>';
+      tablaHTML += '<tr><th>CLAVE</th><th>ESTADO</th><th>FECHA DE ULTIMA MODIFICACION</th></tr>';
+      data.forEach(item => {
+        tablaHTML += <tr>
+                        <td>${item.CLAVE || ''}</td>
+                        <td>${item.ESTADO || ''}</td>
+                        <td>${item['FECHA DE ULTIMA MODIFICACION'] || ''}</td>
+                      </tr>;
+      });
+      tablaHTML += '</table>';
+      document.getElementById('modal-body').innerHTML = tablaHTML;
+      // Mostrar el modal
+      document.getElementById('modal').style.display = 'block';
+      // Inicializar la función para arrastrar el modal
+      dragElement(document.getElementById("modal-content"));
+    }
+
+    // Cerrar el modal cuando se haga clic en la "×"
     document.getElementById('modal-close').onclick = function() {
       document.getElementById('modal').style.display = 'none';
     };
 
-    // Función para hacer que el modal sea movible
-    dragElement(document.getElementById('modal-content'));
+    // Cerrar el modal si se hace clic fuera del contenido del modal
+    window.onclick = function(event) {
+      const modal = document.getElementById('modal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    };
 
+    // Función para hacer el modal movible (draggable)
     function dragElement(elmnt) {
-      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-      if (document.getElementById(elmnt.id + "-header")) {
-        document.getElementById(elmnt.id + "-header").onmousedown = dragMouseDown;
+      var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      var header = document.getElementById("modal-header");
+      if (header) {
+        header.onmousedown = dragMouseDown;
       } else {
         elmnt.onmousedown = dragMouseDown;
       }
-
       function dragMouseDown(e) {
         e = e || window.event;
         e.preventDefault();
+        // Obtener la posición inicial del cursor
         pos3 = e.clientX;
         pos4 = e.clientY;
         document.onmouseup = closeDragElement;
         document.onmousemove = elementDrag;
       }
-
       function elementDrag(e) {
         e = e || window.event;
         e.preventDefault();
+        // Calcular la nueva posición del cursor
         pos1 = pos3 - e.clientX;
         pos2 = pos4 - e.clientY;
         pos3 = e.clientX;
         pos4 = e.clientY;
+        // Actualizar la posición del elemento
         elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
         elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
       }
-
       function closeDragElement() {
         document.onmouseup = null;
         document.onmousemove = null;
