@@ -67,8 +67,24 @@
             padding: 5px 10px;
             margin-left: 10px;
         }
+        /* Tabla para mostrar el archivo CSV */
+        #csv-table-container {
+            position: absolute;
+            top: 60px;
+            left: 50px;
+            z-index: 1000;
+        }
+        table {
+            border: 1px solid #ddd;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
         </style>
-
         <style>
         html, body, #map {
             width: 100%;
@@ -96,6 +112,20 @@
         <!-- Div para mostrar las coordenadas -->
         <div id="coordinates">Coordenadas: -</div>
 
+        <!-- Tabla para mostrar el contenido del archivo CSV -->
+        <div id="csv-table-container">
+            <table id="csv-table">
+                <thead>
+                    <tr>
+                        <!-- Las columnas se insertarán aquí dinámicamente -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Las filas se insertarán aquí dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+
         <script src="resources/qgis2web_expressions.js"></script>
         <script src="./resources/functions.js"></script>
         <script src="./resources/ol.js"></script>
@@ -113,6 +143,49 @@
         <script src="./resources/qgis2web.js"></script>
 
         <script>
+        // Función para cargar y mostrar el archivo CSV desde GitHub
+        function cargarCSV() {
+            const url = 'https://github.com/INYGEO/reportes/blob/main/PRUEBA.csv'; // Cambia esta URL con la correcta
+
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    // Parsear el CSV
+                    const rows = data.split('\n');
+                    const table = document.getElementById('csv-table');
+                    const headerRow = table.querySelector('thead tr');
+                    const tbody = table.querySelector('tbody');
+
+                    // Limpiar tabla antes de agregar nuevos datos
+                    headerRow.innerHTML = '';
+                    tbody.innerHTML = '';
+
+                    // Añadir encabezados
+                    const headers = rows[0].split(',');
+                    headers.forEach(header => {
+                        const th = document.createElement('th');
+                        th.textContent = header.trim();
+                        headerRow.appendChild(th);
+                    });
+
+                    // Añadir filas de datos
+                    rows.slice(1).forEach(row => {
+                        const cells = row.split(',');
+                        const tr = document.createElement('tr');
+                        cells.forEach(cell => {
+                            const td = document.createElement('td');
+                            td.textContent = cell.trim();
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => console.error('Error cargando el archivo CSV:', error));
+        }
+
+        // Llamar la función cargarCSV cuando se cargue la página
+        window.onload = cargarCSV;
+
         // Estilo de resaltado
         var highlightStyle = new ol.style.Style({
             stroke: new ol.style.Stroke({
