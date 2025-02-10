@@ -98,26 +98,42 @@
       background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
     }
     #modal-content {
+      position: absolute;
+      top: 50px;   /* Posición inicial, se podrá mover */
+      left: 50px;  /* Posición inicial, se podrá mover */
       background-color: #fefefe;
-      margin: 10% auto;
-      padding: 20px;
+      padding: 0;
       border: 1px solid #888;
       width: 80%;
       max-height: 80%;
-      overflow-y: auto;
+      overflow: auto;
       border-radius: 5px;
+      resize: both;       /* Redimensionable */
+      overflow: auto;     /* Necesario para redimensionar */
+    }
+    /* Encabezado del modal para arrastrar */
+    #modal-header {
+      cursor: move;
+      background-color: #2196F3;
+      color: white;
+      padding: 10px;
+      user-select: none;
+    }
+    #modal-title {
+      font-size: 18px;
+      display: inline-block;
     }
     #modal-close {
-      color: #aaa;
+      color: #fff;
       float: right;
       font-size: 28px;
       font-weight: bold;
+      cursor: pointer;
     }
     #modal-close:hover,
     #modal-close:focus {
-      color: black;
+      color: #bbb;
       text-decoration: none;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -146,7 +162,10 @@
   <!-- Modal para mostrar la tabla -->
   <div id="modal">
     <div id="modal-content">
-      <span id="modal-close">&times;</span>
+      <div id="modal-header">
+        <span id="modal-title">Tabla de Excel</span>
+        <span id="modal-close">&times;</span>
+      </div>
       <div id="modal-body">
         <!-- Aquí se insertará la tabla -->
       </div>
@@ -173,11 +192,11 @@
     // Estilo de resaltado para las características del mapa
     var highlightStyle = new ol.style.Style({
       stroke: new ol.style.Stroke({
-        color: 'yellow',
+        color: 'yellow', // Color del borde resaltado
         width: 3
       }),
       fill: new ol.style.Fill({
-        color: 'rgba(255, 255, 0, 0.3)'
+        color: 'rgba(255, 255, 0, 0.3)' // Color de relleno semi-transparente
       })
     });
 
@@ -243,7 +262,7 @@
 
     // Función para cargar el archivo Excel desde GitHub y mostrarlo en el modal
     function cargarExcelDesdeGitHub() {
-      const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx';  // Reemplaza esta URL por la correcta
+      const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx'; // Reemplaza con la URL correcta
       fetch(url)
         .then(response => response.blob())
         .then(blob => {
@@ -280,6 +299,8 @@
       document.getElementById('modal-body').innerHTML = tablaHTML;
       // Mostrar el modal
       document.getElementById('modal').style.display = 'block';
+      // Inicializar la función para arrastrar el modal
+      dragElement(document.getElementById("modal-content"));
     }
 
     // Cerrar el modal cuando se haga clic en la "×"
@@ -294,6 +315,42 @@
         modal.style.display = 'none';
       }
     };
+
+    // Función para hacer el modal movible (draggable)
+    function dragElement(elmnt) {
+      var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      var header = document.getElementById("modal-header");
+      if (header) {
+        header.onmousedown = dragMouseDown;
+      } else {
+        elmnt.onmousedown = dragMouseDown;
+      }
+      function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // Obtener la posición inicial del cursor
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+      }
+      function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // Calcular la nueva posición del cursor
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // Actualizar la posición del elemento
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+      }
+      function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+      }
+    }
   </script>
 </body>
 </html>
