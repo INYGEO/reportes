@@ -128,18 +128,18 @@
       #search-container {
         width: 200px;
         top: 15px;
-        left: 30px;
+        left: 10px;
       }
       #search-input {
         width: 120px;
       }
       #tabla-container {
-        width: 20%;
-        top: 150px;
+        width: 90%;
+        top: 140px;
         left: 5%;
       }
       #coordinates {
-        bottom: 15px;
+        bottom: 5px;
         left: 5px;
         font-size: 12px;
       }
@@ -149,11 +149,11 @@
       }
       #load-table-btn {
         top: 80px;
-        left: 2px;
+        left: 10px;
       }
       #download-table-btn {
         top: 80px;
-        left: 15px;
+        left: 120px;
       }
     }
 
@@ -342,7 +342,7 @@
           link.download = 'PRUEBA.xlsx';
           link.click();
         })
-        .catch(error => console.error(error));
+        .catch(error => console.error('Error al descargar la tabla:', error));
     }
 
     function cerrarTabla() {
