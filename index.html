@@ -72,7 +72,7 @@
       margin-left: 10px;
     }
     #tabla-container {
-      display: none; /* La tabla está oculta inicialmente */
+      display: none;
       position: absolute;
       top: 160px;
       left: 50px;
@@ -93,7 +93,7 @@
       border: 1px solid black;
     }
     th {
-      background-color: #28a745; /* Fondo verde para los encabezados */
+      background-color: #28a745;
       color: white;
       font-weight: bold;
       padding: 5px;
@@ -103,16 +103,14 @@
       padding: 5px;
       text-align: left;
     }
-    /* Estilos para las filas alternas */
     tr:nth-child(2n) td {
-      background-color: #d4edda; /* Fondo verde claro para filas pares */
+      background-color: #d4edda;
       color: black;
     }
     tr:nth-child(2n+1) td {
-      background-color: white; /* Fondo blanco para filas impares */
+      background-color: white;
       color: black;
     }
-    /* Estilos para el Modal */
     #modal-close {
       color: #aaa;
       font-size: 15px;
@@ -123,6 +121,71 @@
     #modal-close:focus {
       color: black;
       text-decoration: none;
+    }
+
+    /* Estilos responsivos */
+    @media (max-width: 768px) {
+      #search-container {
+        width: 200px;
+        top: 15px;
+        left: 10px;
+      }
+      #search-input {
+        width: 120px;
+      }
+      #tabla-container {
+        width: 90%;
+        top: 140px;
+        left: 5%;
+      }
+      #coordinates {
+        bottom: 5px;
+        left: 5px;
+        font-size: 12px;
+      }
+      button {
+        padding: 4px 8px;
+        font-size: 14px;
+      }
+      #load-table-btn {
+        top: 80px;
+        left: 10px;
+      }
+      #download-table-btn {
+        top: 80px;
+        left: 120px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #search-container {
+        width: 160px;
+        left: 5px;
+      }
+      #search-input {
+        width: 120px;
+      }
+      #tabla-container {
+        width: 100%;
+        top: 120px;
+      }
+      #coordinates {
+        bottom: 5px;
+        left: 5px;
+        font-size: 12px;
+      }
+      button {
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+      #load-table-btn {
+        top: 70px;
+        left: 5px;
+      }
+      #download-table-btn {
+        top: 70px;
+        left: 100px;
+      }
     }
   </style>
 </head>
@@ -141,22 +204,17 @@
 
   <div id="coordinates">Coordenadas: -</div>
 
-  <!-- Botón para cargar la tabla, posicionado en la zona izquierda -->
   <button id="load-table-btn" onclick="cargarExcelDesdeGitHub()" style="position: absolute; top: 100px; left: 50px; z-index: 1000; background-color: #f8f8f8; padding: 10px 15px; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3);">
     Cargar Tabla
   </button>
 
-  <!-- Botón para descargar la tabla -->
   <button id="download-table-btn" onclick="descargarTabla()" style="position: absolute; top: 100px; left: 170px; z-index: 1000; background-color: #f8f8f8; padding: 10px 15px; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3); display:none;">
     Descargar Tabla
   </button>
 
-  <!-- Contenedor de la tabla, oculto inicialmente -->
   <div id="tabla-container">
     <button id="modal-close" onclick="cerrarTabla()">×</button>
-    <div id="modal-body">
-      <!-- Aquí se insertará la tabla -->
-    </div>
+    <div id="modal-body"></div>
   </div>
 
   <script src="resources/qgis2web_expressions.js"></script>
@@ -189,7 +247,6 @@
 
     var selectedFeature = null;
 
-    // Evento para detectar el movimiento del cursor sobre el mapa
     map.on('pointermove', function (event) {
       let featureFound = false;
       map.getTargetElement().style.cursor = '';
@@ -247,9 +304,8 @@
       }
     }
 
-    // Función para cargar el archivo Excel desde GitHub y mostrarlo en el modal
     function cargarExcelDesdeGitHub() {
-      const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx';  // Reemplaza esta URL por la correcta
+      const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx';
       fetch(url)
         .then(response => response.arrayBuffer())
         .then(data => {
@@ -261,7 +317,6 @@
         .catch(error => console.error(error));
     }
 
-    // Función para generar la tabla HTML
     function generarTabla(data) {
       let table = "<table><tr><th>Clave</th><th>Estado</th><th>Última Modificación</th></tr>";
       data.slice(1).forEach((row, index) => {
@@ -273,14 +328,12 @@
       });
       table += "</table>";
       document.getElementById('modal-body').innerHTML = table;
-      // Mostrar la tabla y el botón de descarga
       document.getElementById('tabla-container').style.display = 'block';
       document.getElementById('download-table-btn').style.display = 'inline-block';
     }
 
-    // Función para descargar la tabla como archivo Excel
     function descargarTabla() {
-      const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx';  // URL del archivo Excel
+      const url = 'https://raw.githubusercontent.com/INYGEO/reportes/main/PRUEBA.xlsx';
       fetch(url)
         .then(response => response.blob())
         .then(blob => {
@@ -289,13 +342,12 @@
           link.download = 'PRUEBA.xlsx';
           link.click();
         })
-        .catch(error => console.error('Error al descargar la tabla:', error));
+        .catch(error => console.error(error));
     }
 
-    // Cerrar la tabla
     function cerrarTabla() {
       document.getElementById('tabla-container').style.display = 'none';
-      document.getElementById('download-table-btn').style.display = 'none';  // Ocultar botón de descarga
+      document.getElementById('download-table-btn').style.display = 'none';
     }
   </script>
 </body>
