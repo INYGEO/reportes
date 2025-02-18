@@ -10,8 +10,8 @@
   <!-- Hojas de estilo -->
   <link rel="stylesheet" href="./resources/ol.css">
   <link rel="stylesheet" href="resources/fontawesome-all.min.css">
-  <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
-  <link rel="stylesheet" href="./resources/qgis2web.css">
+  <link rel="stylesheet" href="resources/ol-layerswitcher.css">
+  <link rel="stylesheet" href="resources/qgis2web.css">
   
   <style>
     html, body {
@@ -212,6 +212,10 @@
     Descargar Tabla
   </button>
 
+  <button id="streetViewBtn" style="position: absolute; bottom: 20px; right: 20px; z-index: 1000; background-color: #f8f8f8; border: none; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3);">
+    <img src="https://raw.githubusercontent.com/INYGEO/reportes/main/resources/street_view_icon_198734.svg" alt="Street View" style="width: 30px; height: auto;">
+  </button>
+
   <div id="tabla-container">
     <button id="modal-close" onclick="cerrarTabla()">×</button>
     <div id="modal-body"></div>
@@ -246,6 +250,8 @@
     });
 
     var selectedFeature = null;
+    var latLng; // Variable para almacenar las coordenadas
+    var isStreetViewMode = false; // Para controlar el modo de Street View
 
     map.on('pointermove', function (event) {
       let featureFound = false;
@@ -271,6 +277,23 @@
       var transformedCoord = ol.proj.toLonLat(coordinate);
       var coordsString = 'Lon: ' + transformedCoord[0].toFixed(6) + ' | Lat: ' + transformedCoord[1].toFixed(6);
       document.getElementById('coordinates').innerHTML = 'Coordenadas: ' + coordsString;
+    });
+
+    // Evento para el botón de activar Street View
+    document.getElementById('streetViewBtn').addEventListener('click', function() {
+      isStreetViewMode = !isStreetViewMode; // Alternar el modo de Street View
+      this.style.backgroundColor = isStreetViewMode ? '#d1ffd1' : '#f8f8f8'; // Cambiar color para indicar que está activo
+    });
+
+    // Agregar un puntero al mapa
+    map.on('click', function(event) {
+      if (isStreetViewMode) {
+        latLng = ol.proj.toLonLat(event.coordinate); // Guardar coordenadas
+        const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${latLng[1]},${latLng[0]}`;
+        window.open(streetViewUrl, '_blank'); // Abrir Street View en una nueva pestaña
+        isStreetViewMode = false; // Desactivar el modo después de seleccionar
+        document.getElementById('streetViewBtn').style.backgroundColor = '#f8f8f8'; // Restablecer color del botón
+      }
     });
 
     function buscarElemento() {
